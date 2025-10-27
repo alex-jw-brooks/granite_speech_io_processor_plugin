@@ -1,0 +1,8 @@
+.vscode
+output
+*.egg-info.
+*.txt
+*.pyc
+PKG-INFO
+build
+scratch
