@@ -1,0 +1,15 @@
+[project]
+# Name of the installed package
+name = "granite-speech-io-processor"
+description = "vLLM plugin for simplifying 2 pass logic in granite speech"
+dynamic = ["version"]
+
+[project.entry-points."vllm.io_processor_plugins"]
+# Name of the actual entrypoint to specify
+granite_speech_pass_simplification = "granite_speech_plugin:register_granite_speech_plugin"
+
+[tool.setuptools.packages.find]
+where = ["."]  # list of folders that contain the packages (["."] by default)
+include = ["granite_speech_plugin*"]  # package names should match these glob patterns (["*"] by default)
+exclude = []  # exclude packages matching these glob patterns (empty by default)
+namespaces = false  # to disable scanning PEP 420 namespaces (true by default)
