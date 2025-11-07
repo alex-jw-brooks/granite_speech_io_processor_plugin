@@ -1,3 +1,6 @@
+"""
+Example for running the pass simplification plugin in offline mode.
+"""
 import os
 import librosa
 from vllm import LLM, SamplingParams
