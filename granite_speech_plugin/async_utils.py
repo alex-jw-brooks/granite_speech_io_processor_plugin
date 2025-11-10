@@ -6,15 +6,9 @@ NOTE: The helpers below are largely derived from the base OpenAIServing
 interface in vLLM, as well as some of its subclasses (notably the chat
 completions one).
 """
-from vllm.inputs.parse import get_prompt_components, PromptComponents
+from vllm.inputs.parse import get_prompt_components
 
 from .utils import _log_engine_request, TRANSCRIPTION_PROMPT, TRANSCRIPTION_TOKENS
-
-
-def _get_prompt_components(prompt):
-    if isinstance(prompt, list):
-        return PromptComponents(token_ids=prompt)
-    return get_prompt_components(prompt)  # type: ignore[arg-type]
 
 
 async def run_async_generate(
@@ -51,9 +45,7 @@ async def run_async_generate(
     engine_prompt = engine_prompts[0]
     engine_prompt["prompt_token_ids"] = TRANSCRIPTION_TOKENS
 
-    # TODO - this is guaranteed to be len 1, so we can remove the loop here and simplify
-    # TODO - check if we really need this wrapper here
-    prompt_text, _, _ = _get_prompt_components(request_prompt)
+    prompt_text, _, _ = get_prompt_components(request_prompt)
 
     engine_request = processor.process_inputs(
         request_id,
