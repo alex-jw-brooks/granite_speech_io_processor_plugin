@@ -17,10 +17,12 @@ model = LLM(
     enforce_eager=True,
     enable_lora=True,
     max_lora_rank=64,
-    max_model_len=2048, # This may be needed for lower resource devices.
+    max_model_len=2048,  # This may be needed for lower resource devices.
     limit_mm_per_prompt={"audio": 1},
-    default_mm_loras = {"audio": model_id}, # Always use the colocated lora if we have audio
-    io_processor_plugin="granite_speech_pass_simplification", # Use the plugin!
+    default_mm_loras={
+        "audio": model_id
+    },  # Always use the colocated lora if we have audio
+    io_processor_plugin="granite_speech_pass_simplification",  # Use the plugin!
 )
 
 inputs = {

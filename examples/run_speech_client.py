@@ -51,18 +51,20 @@ with BytesIO() as buffer:
 # because the plugin will inject one for transcription.
 
 chat_completion_with_audio = client.chat.completions.create(
-    messages=[{
-        "role": "user",
-        "content": [
-            {
-                "type": "audio_url",
-                "audio_url": {
-                    # Any format supported by librosa is supported
-                    "url": f"data:audio/ogg;base64,{audio_base64}"
+    messages=[
+        {
+            "role": "user",
+            "content": [
+                {
+                    "type": "audio_url",
+                    "audio_url": {
+                        # Any format supported by librosa is supported
+                        "url": f"data:audio/ogg;base64,{audio_base64}"
+                    },
                 },
-            },
-        ],
-    }],
+            ],
+        }
+    ],
     temperature=0.2,
     max_tokens=64,
     model=base_model_name,

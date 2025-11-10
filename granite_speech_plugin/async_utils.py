@@ -12,13 +12,22 @@ from vllm.outputs import RequestOutput
 
 from .utils import _log_engine_request, TRANSCRIPTION_PROMPT, TRANSCRIPTION_TOKENS
 
+
 def _get_prompt_components(prompt):
     if isinstance(prompt, list):
         return PromptComponents(token_ids=prompt)
     return get_prompt_components(prompt)  # type: ignore[arg-type]
 
 
-async def run_async_generate(request, preprocess_partial, request_counter, processor, engine_client, sampling_params, lora_request):
+async def run_async_generate(
+    request,
+    preprocess_partial,
+    request_counter,
+    processor,
+    engine_client,
+    sampling_params,
+    lora_request,
+):
     # Schedule the request and get the result generator.
     request_id = f"transcription-{next(request_counter)}"
     priority = 0

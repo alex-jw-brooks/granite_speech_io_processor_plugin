@@ -1,4 +1,3 @@
-import asyncio
 from vllm.plugins.io_processors.interface import IOProcessor
 from vllm.entrypoints.chat_utils import ConversationMessage
 from vllm.entrypoints.utils import get_max_tokens
@@ -9,7 +8,11 @@ from vllm.plugins.io_processors.interface import IOProcessorPluginType
 from vllm.sampling_params import SamplingParams
 from vllm.entrypoints.openai.serving_engine import AnyRequest
 from vllm.entrypoints.openai.protocol import ChatCompletionRequest
-from .utils import submit_audio_prompts_and_run_engine, TRANSCRIPTION_INPUT_LENGTH, TRANSCRIPTION_TOKENS
+from .utils import (
+    submit_audio_prompts_and_run_engine,
+    TRANSCRIPTION_INPUT_LENGTH,
+    TRANSCRIPTION_TOKENS,
+)
 from .async_utils import run_async_generate
 
 
@@ -26,11 +29,15 @@ class GraniteSpeechProcessor(IOProcessor):
         # with the outer loop.
         self.request_counter = Counter()
 
-    def parse_request(self, request: ChatCompletionRequest, has_preprocess_partial=False):
+    def parse_request(
+        self, request: ChatCompletionRequest, has_preprocess_partial=False
+    ):
         # Offline case for .generate() calls
         if not has_preprocess_partial:
             if not isinstance(request, (str, dict)):
-                raise TypeError(f"Parse failed - expected string or dict, got {type(request)}")
+                raise TypeError(
+                    f"Parse failed - expected string or dict, got {type(request)}"
+                )
             return request
 
         if isinstance(request, ChatCompletionRequest):
@@ -46,7 +53,7 @@ class GraniteSpeechProcessor(IOProcessor):
     def pre_process(self, prompt, *, params, lora_request, llm_engine, processor):
         """Checks if the request has audio, and if it does, runs it in the engine
         and sets the output as the input prompt.
-        
+
         TODO: This currently is not handling batching correctly, but with this
         approach, we will also be able to handle mixed audio + text batches
         correctly.
@@ -114,14 +121,16 @@ class GraniteSpeechProcessor(IOProcessor):
         if params is not None:
             return params
         if not isinstance(request, ChatCompletionRequest):
-            raise ValueError("Unable to generate params from anything but chat completions currently")
+            raise ValueError(
+                "Unable to generate params from anything but chat completions currently"
+            )
         return self._build_chat_completions_params(request)
 
     def _build_chat_completions_params(self, request):
         max_tokens = get_max_tokens(
             max_model_len=self.max_model_len,
             request=request,
-            input_length=TRANSCRIPTION_INPUT_LENGTH, #FIXME - we should use the expanded toks here
+            input_length=TRANSCRIPTION_INPUT_LENGTH,  # FIXME - we should use the expanded toks here
             default_sampling_params=self.default_sampling_params,
         )
 
