@@ -5,6 +5,7 @@ from vllm.entrypoints.utils import get_max_tokens
 from vllm.config import VllmConfig
 from vllm.utils import Counter
 from vllm.inputs.data import TokensPrompt as EngineTokensPrompt
+from vllm.plugins.io_processors.interface import IOProcessorPluginType
 from vllm.sampling_params import SamplingParams
 from vllm.entrypoints.openai.serving_engine import AnyRequest
 from vllm.entrypoints.openai.protocol import ChatCompletionRequest
@@ -13,6 +14,8 @@ from .async_utils import run_async_generate
 
 
 class GraniteSpeechProcessor(IOProcessor):
+    plugin_type = IOProcessorPluginType.INPUT_ONLY
+
     def __init__(self, vllm_config: VllmConfig):
         self.vllm_config = vllm_config
         self.model_config = vllm_config.model_config
@@ -128,25 +131,6 @@ class GraniteSpeechProcessor(IOProcessor):
             self.default_sampling_params,
         )
         return sampling_params
-
-
-    # Post processing utils helpers - these are no-ops
-    # for this plugin, since it's preprocessing only.
-    def post_process(self, model_output, request_id=None, **kwargs):
-        return model_output
-
-    async def post_process_async(
-        self,
-        model_output,
-        request_id: str | None = None,
-        **kwargs,
-    ):
-        # TODO - probably do need to async sort these / test batch...
-        # Actually this probaly should be an iterable of model outputs maybe?
-        return model_output
-
-    def output_to_response(self, plugin_output):
-        return plugin_output
 
     def get_modified_lora_request(self, engine_prompts, lora_request):
         # Based on where this is called in the lifecycle,
