@@ -6,13 +6,12 @@ NOTE: The helpers below are largely derived from the base OpenAIServing
 interface in vLLM, as well as some of its subclasses (notably the chat
 completions one).
 """
-from collections.abc import AsyncGenerator, AsyncIterator
+from collections.abc import AsyncGenerator
 from vllm.inputs.parse import get_prompt_components, PromptComponents
-from vllm.entrypoints.utils import get_max_tokens
-from vllm.entrypoints.openai.protocol import ChatCompletionRequest
 from vllm.outputs import RequestOutput
 
 from .utils import _log_engine_request, TRANSCRIPTION_PROMPT, TRANSCRIPTION_TOKENS
+
 def _get_prompt_components(prompt):
     if isinstance(prompt, list):
         return PromptComponents(token_ids=prompt)
@@ -36,13 +35,11 @@ async def run_async_generate(request, preprocess_partial, request_counter, proce
     request_prompts = [TRANSCRIPTION_PROMPT]
     engine_prompts[0]["prompt_token_ids"] = TRANSCRIPTION_TOKENS
 
-    # NOTE - this is guaranteed to be len 1, so we can remove the loop here and simplify
+    # TODO - this is guaranteed to be len 1, so we can remove the loop here and simplify
     for i, engine_prompt in enumerate(engine_prompts):
-        # TODO - do we even need this wrapper in this case?
+        # TODO - check if we really need this wrapper here
         prompt_text, _, _ = _get_prompt_components(request_prompts[i])
 
-        # TODO - this plugin should handle validation and creating the sampling params,
-        # and it should also blow up if beam search is used, since we don't allow it yet
         engine_request = processor.process_inputs(
             request_id,
             engine_prompt,

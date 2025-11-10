@@ -10,7 +10,8 @@ vllm serve ibm-granite/granite-speech-3.3-2b \
     --enable-lora  \
     --default-mm-loras '{"audio":"ibm-granite/granite-speech-3.3-2b"}' \
     --max-lora-rank 64 \
-    --io-processor-plugin granite_speech_pass_simplification
+    --io-processor-plugin granite_speech_pass_simplification \
+    --enforce-eager
 """
 from io import BytesIO
 import base64
