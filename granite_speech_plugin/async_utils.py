@@ -6,9 +6,7 @@ NOTE: The helpers below are largely derived from the base OpenAIServing
 interface in vLLM, as well as some of its subclasses (notably the chat
 completions one).
 """
-from collections.abc import AsyncGenerator
 from vllm.inputs.parse import get_prompt_components, PromptComponents
-from vllm.outputs import RequestOutput
 
 from .utils import _log_engine_request, TRANSCRIPTION_PROMPT, TRANSCRIPTION_TOKENS
 
@@ -32,48 +30,53 @@ async def run_async_generate(
     request_id = f"transcription-{next(request_counter)}"
     priority = 0
     tokenization_kwargs = {}
-    generators: list[AsyncGenerator[RequestOutput, None]] = []
 
     (
         _,
-        request_prompts,
+        _,
         engine_prompts,
     ) = await preprocess_partial(request)
-    # HACK - ^ Would be better to skip the preprocess patial
-    # entirely, but we do need to build the engine prompt.
-    request_prompts = [TRANSCRIPTION_PROMPT]
-    engine_prompts[0]["prompt_token_ids"] = TRANSCRIPTION_TOKENS
+    # HACK - we can *probably* be more efficient here and remove the call to
+    # the partial since the input is fixed, but for now use it preprocess the
+    # multimodal part...
+
+    if len(engine_prompts) > 1:
+        raise ValueError(
+            "We expected to have one engine prompt but have {}!".format(
+                len(engine_prompts)
+            )
+        )
+
+    request_prompt = TRANSCRIPTION_PROMPT
+    engine_prompt = engine_prompts[0]
+    engine_prompt["prompt_token_ids"] = TRANSCRIPTION_TOKENS
 
     # TODO - this is guaranteed to be len 1, so we can remove the loop here and simplify
-    for i, engine_prompt in enumerate(engine_prompts):
-        # TODO - check if we really need this wrapper here
-        prompt_text, _, _ = _get_prompt_components(request_prompts[i])
+    # TODO - check if we really need this wrapper here
+    prompt_text, _, _ = _get_prompt_components(request_prompt)
 
-        engine_request = processor.process_inputs(
-            request_id,
-            engine_prompt,
-            sampling_params,
-            lora_request=lora_request,
-            tokenization_kwargs=tokenization_kwargs,
-            priority=priority,
-        )
+    engine_request = processor.process_inputs(
+        request_id,
+        engine_prompt,
+        sampling_params,
+        lora_request=lora_request,
+        tokenization_kwargs=tokenization_kwargs,
+        priority=priority,
+    )
 
-        _log_engine_request(engine_request)
+    _log_engine_request(engine_request)
 
-        # NOTE: the engine client handles the io processor piece here
-        generator = engine_client.generate(
-            engine_request,
-            sampling_params,
-            request_id,
-            lora_request=lora_request,
-            priority=priority,
-            prompt_text=prompt_text,
-            tokenization_kwargs=tokenization_kwargs,
-        )
-        generators.append(generator)
+    # NOTE: the engine client handles the io processor piece here
+    result_generator = engine_client.generate(
+        engine_request,
+        sampling_params,
+        request_id,
+        lora_request=lora_request,
+        priority=priority,
+        prompt_text=prompt_text,
+        tokenization_kwargs=tokenization_kwargs,
+    )
 
-    assert len(generators) == 1
-    (result_generator,) = generators
-
+    # yield the result from the async generator
     async for res in result_generator:
         return res

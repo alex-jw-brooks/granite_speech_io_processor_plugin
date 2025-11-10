@@ -84,7 +84,7 @@ class GraniteSpeechProcessor(IOProcessor):
         self,
         prompt,
         request_id,
-        preprocess_partial,  ### Actually we may not even need this partial, since we can just create the inputs directly
+        preprocess_partial,
         lora_request,
         engine_client,
         processor,
